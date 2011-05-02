@@ -107,7 +107,7 @@ static const union {unsigned char c[8]; double d;}
    union_nan_double = {{0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}};
 
 /* our croak replacement */
-#define barf pdl_barf
+#define barf PDL->pdl_barf
 
 typedef int Logical;
 
