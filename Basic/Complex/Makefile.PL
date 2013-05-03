@@ -8,7 +8,7 @@ use ExtUtils::MakeMaker;
 
 PDL::Core::Dev->import();
 
-@pack = (["complex.pd",Complex,PDL::Complex]);
+@pack = (["complex3.pd",Complex3,PDL::Complex3]);
 
 %hash = pdlpp_stdargs_int(@::pack);
 $hash{LIBS} = ['-lm'];
