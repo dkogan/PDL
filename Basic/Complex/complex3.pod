@@ -1,0 +1,188 @@
+=head1 NAME
+
+PDL::Complex - handle complex numbers
+
+=head1 SYNOPSIS
+
+  use PDL;
+  use PDL::Complex;
+
+=head1 DESCRIPTION
+
+This module features a growing number of functions manipulating complex
+numbers. These are usually represented as a pair C<[ real imag ]> or
+C<[ angle phase ]>. If not explicitly mentioned, the functions can work
+inplace (not yet implemented!!!) and require rectangular form.
+
+While there is a procedural interface available (C<< $a/$b*$c <=> Cmul
+(Cdiv $a, $b), $c) >>), you can also opt to cast your pdl's into the
+C<PDL::Complex> datatype, which works just like your normal piddles, but
+with all the normal perl operators overloaded.
+
+The latter means that C<sin($a) + $b/$c> will be evaluated using the
+normal rules of complex numbers, while other pdl functions (like C<max>)
+just treat the piddle as a real-valued piddle with a lowest dimension of
+size 2, so C<max> will return the maximum of all real and imaginary parts,
+not the "highest" (for some definition)
+
+=head1 TIPS, TRICKS & CAVEATS
+
+=over 4
+
+=item *
+
+C<i> is a constant exported by this module, which represents
+C<-1**0.5>, i.e. the imaginary unit. it can be used to quickly and
+conviniently write complex constants like this: C<4+3*i>.
+
+=item *
+
+Use C<r2C(real-values)> to convert from real to complex, as in C<$r
+= Cpow $cplx, r2C 2>. The overloaded operators automatically do that for
+you, all the other functions, do not. So C<Croots 1, 5> will return all
+the fifths roots of 1+1*i (due to threading).
+
+=item *
+
+use C<cplx(real-valued-piddle)> to cast from normal piddles into the
+complex datatype. Use C<real(complex-valued-piddle)> to cast back. This
+requires a copy, though.
+
+=item *
+
+This module has received some testing by Vanuxem Grégory
+(g.vanuxem at wanadoo dot fr). Please report any other errors you
+come across!
+
+=back
+
+=head1 EXAMPLE WALK-THROUGH
+
+The complex constant five is equal to C<pdl(1,0)>:
+
+   pdl> p $x = r2C 5
+   5 +0i
+
+Now calculate the three cubic roots of of five:
+
+   pdl> p $r = Croots $x, 3
+   [1.70998 +0i  -0.854988 +1.48088i  -0.854988 -1.48088i]
+
+Check that these really are the roots:
+
+   pdl> p $r ** 3
+   [5 +0i  5 -1.22465e-15i  5 -7.65714e-15i]
+
+Duh! Could be better. Now try by multiplying C<$r> three times with itself:
+
+   pdl> p $r*$r*$r
+   [5 +0i  5 -4.72647e-15i  5 -7.53694e-15i]
+
+Well... maybe C<Cpow> (which is used by the C<**> operator) isn't as
+bad as I thought. Now multiply by C<i> and negate, which is just a very
+expensive way of swapping real and imaginary parts.
+
+   pdl> p -($r*i)
+   [0 -1.70998i  1.48088 +0.854988i  -1.48088 +0.854988i]
+
+Now plot the magnitude of (part of) the complex sine. First generate the
+coefficients:
+
+   pdl> $sin = i * zeroes(50)->xlinvals(2,4) + zeroes(50)->xlinvals(0,7)
+
+Now plot the imaginary part, the real part and the magnitude of the sine
+into the same diagram:
+
+   pdl> use PDL::Graphics::Gnuplot
+   pdl> gplot( with => 'lines',
+              PDL::cat(im ( sin $sin ),
+                       re ( sin $sin ),
+                       abs( sin $sin ) ))
+
+An ASCII version of this plot looks like this:
+
+  30 ++-----+------+------+------+------+------+------+------+------+-----++
+     +      +      +      +      +      +      +      +      +      +      +
+     |                                                                   $$|
+     |                                                                  $  |
+  25 ++                                                               $$  ++
+     |                                                              ***    |
+     |                                                            **   *** |
+     |                                                         $$*        *|
+  20 ++                                                       $**         ++
+     |                                                     $$$*           #|
+     |                                                  $$$   *          # |
+     |                                                $$     *           # |
+  15 ++                                            $$$       *          # ++
+     |                                          $$$        **           #  |
+     |                                      $$$$          *            #   |
+     |                                  $$$$              *            #   |
+  10 ++                            $$$$$                 *            #   ++
+     |                        $$$$$                     *             #    |
+     |                 $$$$$$$                         *             #     |
+   5 ++       $$$############                          *             #    ++
+     |*****$$$###            ###                      *             #      |
+     *    #*****                #                     *             #      |
+     | ###      ***              ###                **              #      |
+   0 ##            ***              #              *               #      ++
+     |                *              #             *              #        |
+     |                 ***            #          **               #        |
+     |                    *            #        *                #         |
+  -5 ++                    **           #      *                 #        ++
+     |                       ***         ##  **                 #          |
+     |                          *          #*                  #           |
+     |                           ****    ***##                #            |
+ -10 ++                              ****     #              #            ++
+     |                                         #             #             |
+     |                                          ##         ##              |
+     +      +      +      +      +      +      +  ### + ###  +      +      +
+ -15 ++-----+------+------+------+------+------+-----###-----+------+-----++
+     0      5      10     15     20     25     30     35     40     45     50
+
+=head2 cplx real-valued-pdl
+
+Cast a real-valued piddle to the complex datatype. The first dimension of
+the piddle must be of size 2. After this the usual (complex) arithmetic
+operators are applied to this pdl, rather than the normal elementwise pdl
+operators.  Dataflow to the complex parent works. Use C<sever> on the result
+if you don't want this.
+
+
+=head2 complex real-valued-pdl
+
+Cast a real-valued piddle to the complex datatype I<without> dataflow
+and I<inplace>. Achieved by merely reblessing a piddle. The first dimension of
+the piddle must be of size 2.
+
+=head2 real cplx-valued-pdl
+
+Cast a complex valued pdl back to the "normal" pdl datatype. Afterwards
+the normal elementwise pdl operators are used in operations. Dataflow
+to the real parent works. Use C<sever> on the result if you don't want this.
+
+=head2 Ctan a [not inplace]
+
+  tan (a) = -i * (exp (a*i) - exp (-a*i)) / (exp (a*i) + exp (-a*i))
+
+=head2 Catan cplx [not inplace]
+
+Return the complex C<atan()>.
+
+=head2 re cplx, im cplx
+
+Return the real or imaginary part of the complex number(s) given. These
+are slicing operators, so data flow works. The real and imaginary parts
+are returned as piddles (ref eq PDL).
+
+=head1 AUTHOR
+
+Copyright (C) 2000 Marc Lehmann <pcg@goof.com>.
+All rights reserved. There is no warranty. You are allowed
+to redistribute this software / documentation as described
+in the file COPYING in the PDL distribution.
+
+=head1 SEE ALSO
+
+perl(1), L<PDL>.
+
+=cut
