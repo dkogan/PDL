@@ -1,3 +1,8 @@
+BEGIN
+{
+  $ENV{PDL_SUPPRESS_DEPRECATION_WARNING__PDL_COMPLEX} = 1;
+}
+
 use PDL::LiteF;
 use PDL::Complex;
 use PDL::Config;
