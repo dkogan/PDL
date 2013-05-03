@@ -1,5 +1,7 @@
 $VERSION = 0.7;
 
+pp_deprecate_module( infavor => "PDL::Complex3" );
+
 # pp_setversion $VERSION;  # haven't worked out why it breaks my system (CS)
 pp_beginwrap; # required for overload to work
 
