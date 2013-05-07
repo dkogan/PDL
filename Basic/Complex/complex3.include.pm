@@ -1,23 +1,23 @@
 sub re($) { $_[0]->slice("(0)"); }
 sub im($) { $_[0]->slice("(1)"); }
 
-
 our $floatformat  = "%4.4g";    # Default print format for long numbers
 our $doubleformat = "%6.6g";
 
-$PDL::Complex::_STRINGIZING = 0;
-
-sub string
+sub Cstring
 {
   my($self,$format1,$format2)=@_;
   my @dims = $self->dims;
   return PDL::string($self) if ($dims[0] != 2);
 
-  if ($PDL::Complex::_STRINGIZING)
+  local $PDL::Complex3::_STRINGIZING;
+  if ($PDL::Complex3::_STRINGIZING)
   {
     return "ALREADY_STRINGIZING_NO_LOOPS";
   }
-  local $PDL::Complex::_STRINGIZING = 1;
+
+  $PDL::Complex3::_STRINGIZING = 1;
+
   my $ndims = $self->getndims;
   if ($self->nelem > $PDL::toolongtoprint)
   {
@@ -76,8 +76,8 @@ sub string
     my ($ret,$dformat,$t, $i);
 
     my $dtype = $self->get_datatype();
-    $dformat = $PDL::Complex::floatformat  if $dtype == $PDL_F;
-    $dformat = $PDL::Complex::doubleformat if $dtype == $PDL_D;
+    $dformat = $PDL::Complex3::floatformat  if $dtype == $PDL_F;
+    $dformat = $PDL::Complex3::doubleformat if $dtype == $PDL_D;
 
     $ret = "[" if $self->getndims() > 1;
     my $badflag = $self->badflag();
@@ -168,12 +168,12 @@ sub string
       {
         if ($dtype == $PDL_F)
         {
-          $format1 = $PDL::Complex::floatformat;
+          $format1 = $PDL::Complex3::floatformat;
           $findmax = 1;
         }
         elsif ($dtype == $PDL_D)
         {
-          $format1 = $PDL::Complex::doubleformat;
+          $format1 = $PDL::Complex3::doubleformat;
           $findmax = 1;
         }
         else
@@ -185,12 +185,12 @@ sub string
       {
         if ($dtype == $PDL_F)
         {
-          $format2 = $PDL::Complex::floatformat;
+          $format2 = $PDL::Complex3::floatformat;
           $findmax = 1;
         }
         elsif ($dtype == $PDL_D)
         {
-          $format2 = $PDL::Complex::doubleformat;
+          $format2 = $PDL::Complex3::doubleformat;
           $findmax = 1;
         }
         else
@@ -318,3 +318,15 @@ sub string
     return $ret;
   }
 }
+
+sub Cprint
+{
+  print Cstring(@_);
+}
+
+
+# make these usable as methods
+*PDL::Cstring = \&Cstring;
+*PDL::Cprint  = \&Cprint;
+*PDL::Cre     = \&Cre;
+*PDL::Cim     = \&Cim;

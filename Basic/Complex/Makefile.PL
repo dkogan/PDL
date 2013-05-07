@@ -12,6 +12,12 @@ PDL::Core::Dev->import();
 
 %hash = pdlpp_stdargs_int(@::pack);
 $hash{LIBS} = ['-lm'];
+$hash{CCFLAGS} = "$Config{ccflags} --std=c99";
+
+$hash{depend} = { 'Complex3.pm' => join(' ', qw(complex3.include.c
+                                                complex3.include.pm
+                                                complex3.pod) )};
+
 WriteMakefile(%hash);
 
 sub MY::postamble {
