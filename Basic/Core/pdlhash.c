@@ -63,7 +63,7 @@ void pdl_grow (pdl* a, PDL_Indx newsize) {
    
    {
      void *p;
-     p = SvGROW ( foo, nbytes );   SvCUR_set( foo, nbytes );
+     p = SvGROW_aligned ( foo, nbytes );   SvCUR_set( foo, nbytes );
    }
    a->data = (void *) SvPV( foo, len ); a->nvals = newsize;
 }

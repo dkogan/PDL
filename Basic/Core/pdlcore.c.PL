@@ -47,6 +47,10 @@ print OUT <<"!WITH!SUBS!";
 print OUT <<'!HEADER!'
 #undef FOODEB
 
+#include <malloc.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define PDL_CORE      /* For certain ifdefs */
 #include "pdl.h"      /* Data structure declarations */
 #include "pdlcore.h"  /* Core declarations */
@@ -500,6 +504,46 @@ PDL_Indx pdl_safe_indterm( PDL_Indx dsz, PDL_Indx at, char *file, int lineno)
   return at; // This can never happen - placed to avoid a compiler warning.
 }
 
+/* aligned SvGROW. Used to allocate memory for piddle data. Makes sure the
+memory is aligned so that SIMD instructions can be used. This function exists
+because the normal "SvGROW" doesn't take care of alignment */
+char* SvGROW_aligned( SV* sv, STRLEN length )
+{
+  // this is only for "normal" strings. PDL generally uses only those (no COW,
+  // offset, etc)
+  if( SvROK(sv) )
+    croak("Internal error. SvGROW_aligned() is meant to work with plain perl strings.\n"
+          "A reference was passed to it. Giving up.");
+  if( SvTYPE(sv) < SVt_PV )
+    croak("Internal error. SvGROW_aligned() is meant to work with plain perl strings.\n"
+          "The string type is >= SVt_PV: %d. Giving up.", SvTYPE(sv) );
+  if( SvOOK(sv) )
+    croak("Internal error. SvGROW_aligned() is meant to work with plain perl strings.\n"
+          "The string has an offset. Giving up.");
+  if( SvIsCOW(sv) )
+    croak("Internal error. SvGROW_aligned() is meant to work with plain perl strings.\n"
+          "The string has copy-on-write enabled. Giving up.");
+
+  char*  olddata = SvPVX(sv);
+  STRLEN ncurr   = SvCUR(sv);
+
+  if (length <= ncurr)
+    return olddata;
+
+  char* newdata = memalign( 16, length );
+
+  if( olddata != NULL && ncurr != 0 )
+    memcpy( newdata, olddata, ncurr );
+
+  SvPV_set(sv, newdata);
+  SvLEN_set(sv, length);
+  SvCUR_set(sv, length);
+  free(olddata);
+
+  return newdata;
+}
+
+
 /*
    pdl_malloc - utility to get temporary memory space. Uses
    a mortal *SV for this so it is automatically freed when the current
@@ -514,7 +558,7 @@ void* pdl_malloc ( STRLEN nbytes ) {
 
    work = sv_2mortal(newSVpv("", 0));
 
-   SvGROW( work, nbytes);
+   SvGROW_aligned( work, nbytes);
 
    return (void *) SvPV(work, n_a);
 }

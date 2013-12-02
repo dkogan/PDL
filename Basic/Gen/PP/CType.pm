@@ -148,7 +148,7 @@ sub get_malloc {
 		if($_ eq "PTR") {confess("Cannot alloc pointer, must be array");}
 		elsif($_ =~/^ARR\((.*)\)$/) {
 			$str .= "$prev $assignto =
-				malloc(sizeof(* $assignto) * $1);
+				memalign(0x10, sizeof(* $assignto) * $1);
 				";
 			$no++;
 			$prev = "{int __malloc_ind_$no;

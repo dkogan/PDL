@@ -137,6 +137,7 @@ PDL_Indx *    pdl_packdims ( SV* sv, int*ndims ); /* Pack dims[] into SV aref */
 void    pdl_unpackdims ( SV* sv, PDL_Indx *dims,  /* Unpack */
                          int ndims );
 void*   pdl_malloc ( STRLEN nbytes );           /* malloc memory - auto free()*/
+char*   SvGROW_aligned( SV* sv, STRLEN length ); /* aligned SvGROW. Used for pdl data allocation */
 
 void pdl_makescratchhash(pdl *ret,double data, int datatype);
 PDL_Indx pdl_safe_indterm(PDL_Indx dsz, PDL_Indx at, char *file, int lineno);
