@@ -553,14 +553,11 @@ char* SvGROW_aligned( SV* sv, STRLEN length )
 
 
 void* pdl_malloc ( STRLEN nbytes ) {
-    STRLEN n_a;
    SV* work;
 
    work = sv_2mortal(newSVpv("", 0));
 
-   SvGROW_aligned( work, nbytes);
-
-   return (void *) SvPV(work, n_a);
+   return (void*)SvGROW_aligned( work, nbytes);
 }
 
 /*********** Stuff for barfing *************/

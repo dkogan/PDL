@@ -60,12 +60,11 @@ void pdl_grow (pdl* a, PDL_Indx newsize) {
    	die("Probably false alloc of over 1Gb PDL! (set $PDL::BIGPDL = 1 to enable)");
      fflush(stdout);
    }
-   
+
    {
-     void *p;
-     p = SvGROW_aligned ( foo, nbytes );   SvCUR_set( foo, nbytes );
+     a->data = SvGROW_aligned ( foo, nbytes );
    }
-   a->data = (void *) SvPV( foo, len ); a->nvals = newsize;
+   a->nvals = newsize;
 }
 
 /* unpack dims array into Hash */
